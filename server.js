@@ -20,7 +20,6 @@ const PORT = process.env.PORT || 3000;
 // Verbindung zur Datenbank herstellen, bevor der Server startet
 connect().then(db => {
   // Datenbank ist jetzt verbunden und kann verwendet werden
-  // Beispiel: app.use('/api/events', eventsRouter(db));
   app.get('/', (req, res) => res.send('Hello World!'));
 
   app.listen(PORT, () => {
