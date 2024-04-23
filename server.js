@@ -1,3 +1,4 @@
+require('dotenv').config();
 // Startet einen simplen Server
 // Building the environment
 // docker-compose up --build
@@ -8,12 +9,21 @@
 
 // Stopping
 // docker-compose down
+// server.js
 const express = require('express');
+
+const { connect } = require('./database'); // Pfad zur database.js-Datei
+
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.get('/', (req, res) => res.send('Hello World!'));
+// Verbindung zur Datenbank herstellen, bevor der Server startet
+connect().then(db => {
+  // Datenbank ist jetzt verbunden und kann verwendet werden
+  // Beispiel: app.use('/api/events', eventsRouter(db));
+  app.get('/', (req, res) => res.send('Hello World!'));
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 });
