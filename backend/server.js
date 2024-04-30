@@ -11,11 +11,12 @@ require('dotenv').config();
 // docker-compose down
 // server.js
 const express = require('express');
+const cors = require('cors');
 
 const { connect } = require('./database'); // Pfad zur database.js-Datei
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Verbindung zur Datenbank herstellen, bevor der Server startet
 connect().then(db => {
