@@ -18,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 const corsOptions = {
-  origin: 'http://localhost:3000', // Passen Sie dies an die URL Ihres Frontends an
+  origin: 'http://localhost:3000', //  URL des Frontends
   optionsSuccessStatus: 200
 };
 
