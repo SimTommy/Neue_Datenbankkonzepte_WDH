@@ -1,5 +1,5 @@
 # Verwenden Sie ein offizielles Node-Image als Basis
-FROM node:22-alpine3.18
+FROM node:22-alpine
 
 # Setzen Sie das Arbeitsverzeichnis im Container
 WORKDIR /app
