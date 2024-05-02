@@ -1,5 +1,5 @@
 # Verwenden des offiziellen Node.js 22-Images
-FROM node:22-alpine
+FROM node:21.7.3-alpine3.18
 
 # Setzen des Arbeitsverzeichnisses im Container
 WORKDIR /app
