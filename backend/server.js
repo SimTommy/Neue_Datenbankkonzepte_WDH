@@ -1,34 +1,27 @@
 require('dotenv').config();
-// Startet einen simplen Server
-// Building the environment
-// docker-compose up --build
-
-// Starting it w/o building it every time
-// docker-compose up 
-// http://localhost:3000
-
-// Stopping
-// docker-compose down
-// server.js
 const express = require('express');
 const cors = require('cors');
-const { connect } = require('./database'); // Pfad zur database.js-Datei
+const { connect } = require('./database'); 
+const routes = require('./routes'); // Import der Routen
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// CORS-Konfiguration
 const corsOptions = {
-  origin: 'http://localhost:3000', //  URL des Frontends
+  origin: 'http://localhost:3000', // URL des Frontends
   optionsSuccessStatus: 200
 };
-
-app.use(cors(corsOptions)); // CORS für alle Routen verwenden
+app.use(cors(corsOptions));
 app.use(express.json()); // Ermöglicht das Parsen von JSON-body Requests
+
+// Routen verwenden
+app.use('/api', routes); // Alle API-Routen sind jetzt unter dem Präfix /api verfügbar
 
 // Verbindung zur Datenbank herstellen, bevor der Server startet
 connect().then(db => {
   // Datenbank ist jetzt verbunden und kann verwendet werden
-  app.get('/', (req, res) => res.send('Hello World!'));
+  app.get('/', (req, res) => res.send('Hello World!')); // Einfacher Test-Endpoint
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
