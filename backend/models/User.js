@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const AutoIncrement = require('mongoose-sequence')(mongoose);
+const AutoIncrement = require('mongoose-sequence')(mongoose); // für die leichtere Handhabung der User, Events etc. 
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },

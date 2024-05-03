@@ -1,8 +1,15 @@
 const express = require('express');
 const router = express.Router();
+
+// Vordefinierte Schemata
+
 const User = require('./models/User');
 const Event = require('./models/Event');
 const Comment = require('./models/Comment');
+
+
+// Funktionen
+const upload = require('./imageupload');
 
 //---------------------User Routen-------------------------
 
@@ -90,20 +97,106 @@ router.delete('/users/:userId', async (req, res) => {
 });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //--------------------- Event Routen -----------------------------
+// Veranstaltung erstellen
 router.post('/events', async (req, res) => {
-    // Event erstellen Logik
+    console.log("Attempting to create an Event with:", req.body);
+    try {
+      const event = new Event(req.body);
+      await event.save();
+      res.status(201).json(event);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Alle Veranstaltungen abrufen
+  router.get('/events', async (req, res) => {
+    try {
+      const events = await Event.find().populate('organizer participants');
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Einzelne Veranstaltung abrufen
+  router.get('/events/:id', async (req, res) => {
+    try {
+      const event = await Event.findById(req.params.id).populate('organizer participants comments.author');
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Veranstaltung aktualisieren
+  router.put('/events/:id', async (req, res) => {
+    try {
+      const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      res.json(event);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Veranstaltung löschen
+  router.delete('/events/:id', async (req, res) => {
+    try {
+      const event = await Event.findByIdAndDelete(req.params.id);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      res.json({ message: 'Event deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+
+//------------Bilder Hochladen -----------------------
+
+// Route zum Hochladen von Bildern zu einem Event
+router.post('/events/:id/upload', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Kein Bild zum Hochladen erhalten' });
+        }
+
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        event.images.push(req.file.path); // Bildpfad zum Event hinzufügen
+        await event.save();
+        res.status(200).json({ message: 'Image uploaded successfully', path: req.file.path });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
-
-router.get('/events', async (req, res) => {
-    // Alle Events abrufen Logik
-});
-
-
-
-
-
-
 
 //---------------- Kommentar Routen--------------------
 router.post('/comments', async (req, res) => {
