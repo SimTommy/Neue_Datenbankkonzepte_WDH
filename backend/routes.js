@@ -117,64 +117,76 @@ router.delete('/users/:userId', async (req, res) => {
 //--------------------- Event Routen -----------------------------
 // Veranstaltung erstellen
 router.post('/events', async (req, res) => {
-    console.log("Attempting to create an Event with:", req.body);
-    try {
+  console.log("Attempting to create an Event with:", req.body);
+  try {
       const event = new Event(req.body);
       await event.save();
       res.status(201).json(event);
-    } catch (error) {
+  } catch (error) {
       res.status(400).json({ message: error.message });
-    }
-  });
-  
-  // Alle Veranstaltungen abrufen
-  router.get('/events', async (req, res) => {
-    try {
-      const events = await Event.find().populate('organizer participants');
+  }
+});
+
+// Alle Veranstaltungen abrufen
+router.get('/events', async (req, res) => {
+  try {
+      const events = await Event.find()
+          .populate('organizer', 'username email')
+          .populate('participants', 'username email')
+          .populate({
+              path: 'comments.author',
+              select: 'username email'
+          });
       res.json(events);
-    } catch (error) {
+  } catch (error) {
       res.status(500).json({ message: error.message });
-    }
-  });
-  
-  // Einzelne Veranstaltung abrufen
-  router.get('/events/:id', async (req, res) => {
-    try {
-      const event = await Event.findById(req.params.id).populate('organizer participants comments.author');
+  }
+});
+
+// Einzelne Veranstaltung abrufen
+router.get('/events/:id', async (req, res) => {
+  try {
+      const event = await Event.findById(req.params.id)
+          .populate('organizer', 'username email')
+          .populate('participants', 'username email')
+          .populate({
+              path: 'comments.author',
+              select: 'username email'
+          });
       if (!event) {
-        return res.status(404).json({ message: 'Event not found' });
+          return res.status(404).json({ message: 'Event not found' });
       }
       res.json(event);
-    } catch (error) {
+  } catch (error) {
       res.status(500).json({ message: error.message });
-    }
-  });
-  
-  // Veranstaltung aktualisieren
-  router.put('/events/:id', async (req, res) => {
-    try {
+  }
+});
+
+// Veranstaltung aktualisieren
+router.put('/events/:id', async (req, res) => {
+  try {
       const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
       if (!event) {
-        return res.status(404).json({ message: 'Event not found' });
+          return res.status(404).json({ message: 'Event not found' });
       }
       res.json(event);
-    } catch (error) {
+  } catch (error) {
       res.status(400).json({ message: error.message });
-    }
-  });
-  
-  // Veranstaltung löschen
-  router.delete('/events/:id', async (req, res) => {
-    try {
+  }
+});
+
+// Veranstaltung löschen
+router.delete('/events/:id', async (req, res) => {
+  try {
       const event = await Event.findByIdAndDelete(req.params.id);
       if (!event) {
-        return res.status(404).json({ message: 'Event not found' });
+          return res.status(404).json({ message: 'Event not found' });
       }
       res.json({ message: 'Event deleted successfully' });
-    } catch (error) {
+  } catch (error) {
       res.status(500).json({ message: error.message });
-    }
-  });
+  }
+});
 
 
 //------------Bilder Hochladen -----------------------
@@ -198,9 +210,124 @@ router.post('/events/:id/upload', upload.single('image'), async (req, res) => {
     }
 });
 
+// Route zum Abrufen eines Bildes für ein bestimmtes Event | Path könnte falsch sein
+router.get('/events/:id/images/:filename', async (req, res) => {
+  try {
+      const event = await Event.findById(req.params.id);
+      if (!event) {
+          return res.status(404).json({ message: 'Event not found' });
+      }
+
+      const filename = req.params.filename;
+      if (!event.images.includes(filename)) {
+          return res.status(404).json({ message: 'Image not found for this event' });
+      }
+
+      const imagePath = path.join(__dirname, '../public/uploads', filename);
+
+      fs.access(imagePath, fs.constants.F_OK, (err) => {
+          if (err) {
+              return res.status(404).json({ message: 'Image file not found' });
+          }
+
+          res.sendFile(imagePath);
+      });
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+
+
+
 //---------------- Kommentar Routen--------------------
-router.post('/comments', async (req, res) => {
-    // Kommentar erstellen Logik
+// Kommentar erstellen
+router.post('/events/:eventId/comments', async (req, res) => {
+  try {
+      const { content, author } = req.body;
+      const { eventId } = req.params;
+
+      // Überprüfen, ob das Event existiert
+      const event = await Event.findById(eventId);
+      if (!event) {
+          return res.status(404).json({ message: 'Event not found' });
+      }
+
+      const newComment = {
+          content,
+          author,
+          createdAt: Date.now()
+      };
+
+      event.comments.push(newComment);
+      await event.save();
+
+      res.status(201).json(newComment);
+  } catch (error) {
+      res.status(400).json({ message: error.message });
+  }
+});
+
+// Alle Kommentare zu einem bestimmten Event abrufen
+router.get('/events/:eventId/comments', async (req, res) => {
+  try {
+      const { eventId } = req.params;
+      const event = await Event.findById(eventId)
+          .populate({
+              path: 'comments.author',
+              select: 'username email'
+          });
+      if (!event) {
+          return res.status(404).json({ message: 'Event not found' });
+      }
+      res.json(event.comments);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+// Einzelnen Kommentar abrufen
+router.get('/comments/:commentId', async (req, res) => {
+  try {
+      const { commentId } = req.params;
+      const comment = await Comment.findById(commentId)
+          .populate('author', 'username email')
+          .populate('event', 'title');
+      if (!comment) {
+          return res.status(404).json({ message: 'Comment not found' });
+      }
+      res.json(comment);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+// Einzelnen Kommentar bearbeiten / updaten
+router.put('/comments/:commentId', async (req, res) => {
+  try {
+      const { commentId } = req.params;
+      const updatedComment = await Comment.findByIdAndUpdate(commentId, req.body, { new: true, runValidators: true });
+      if (!updatedComment) {
+          return res.status(404).json({ message: 'Comment not found' });
+      }
+      res.json(updatedComment);
+  } catch (error) {
+      res.status(400).json({ message: error.message });
+  }
+});
+
+// Einzelnen Kommentar löschen
+router.delete('/comments/:commentId', async (req, res) => {
+  try {
+      const { commentId } = req.params;
+      const comment = await Comment.findByIdAndDelete(commentId);
+      if (!comment) {
+          return res.status(404).json({ message: 'Comment not found' });
+      }
+      res.json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;

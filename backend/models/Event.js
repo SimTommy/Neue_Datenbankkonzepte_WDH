@@ -16,7 +16,7 @@ const eventSchema = new mongoose.Schema({
   }],
   category: String,
   tags: [String],
-  createdOn: { type: Date, default: Date.now }, // Automatisch die aktuelle Zeit setzen
+  createdOn: { type: Date, default: Date.now },
   createdBy: { type: String } // Benutzername des Organisators
 });
 
