@@ -12,6 +12,7 @@ const Ticket = require('./models/Ticket');
 // Funktionen
 const upload = require('./imageupload');
 const { comparePassword, generateToken, authenticateToken } = require('./auth');
+const { sendEmail } = require('./notifications'); // Für die E-Mail notifs
 
 //---------------------User Routen-------------------------
 
@@ -371,6 +372,64 @@ router.delete('/comments/:commentId', async (req, res) => {
   } catch (error) {
       res.status(500).json({ message: error.message });
   }
+});
+
+
+//------------------ Tickets -------------------
+// Ticketkauf
+router.post('/events/:eventId/tickets', authenticateToken, async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        const newTicket = new Ticket({
+            event: eventId,
+            holder: req.user.id
+        });
+
+        await newTicket.save();
+        event.participants.push(req.user.id);
+        await event.save();
+
+        res.status(201).json(newTicket);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Alle Tickets für einen Benutzer abrufen --> ist gesichert hinter dem token, aber könnte theoretisch ausgelassen bleiben (nur per user id)
+router.get('/users/:userId/tickets', authenticateToken, async (req, res) => {
+    try {
+        const tickets = await Ticket.find({ holder: req.user.id }).populate('event', 'title location');
+        res.json(tickets);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+//----------- E-Mail Erinnerung Event ------------
+// Wird vermutlich erst möglich sein, wenn wir eine trash mail verwenden auf die jeder zugriff hat. selbe bei .env dann einstellen und testen
+// Vorerst ausgelassen
+router.post('/events/:eventId/notify', authenticateToken, async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const event = await Event.findById(eventId).populate('participants', 'email');
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        for (const participant of event.participants) {
+            await sendEmail(participant.email, `Erinnerung: ${event.title}`, `Das Event ${event.title} findet bald statt.`);
+        }
+
+        res.status(200).json({ message: 'Reminder emails sent successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 module.exports = router;
