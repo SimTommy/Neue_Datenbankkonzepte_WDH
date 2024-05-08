@@ -6,10 +6,12 @@ const router = express.Router();
 const User = require('./models/User');
 const Event = require('./models/Event');
 const Comment = require('./models/Comment');
+const Ticket = require('./models/Ticket');
 
 
 // Funktionen
 const upload = require('./imageupload');
+const { comparePassword, generateToken, authenticateToken } = require('./auth');
 
 //---------------------User Routen-------------------------
 
@@ -99,7 +101,48 @@ router.delete('/users/:userId', async (req, res) => {
 
 
 
+//--------------------- Registrierung + Login ------------------------------
+// Benutzerregistrierung
+router.post('/register', async (req, res) => {
+    try {
+        const { username, email, password, role } = req.body;
 
+        // Benutzer erstellen (Passwort wird automatisch gehasht)
+        const newUser = new User({ username, email, password, role });
+        await newUser.save();
+
+        const token = generateToken(newUser);
+        res.status(201).json({ message: 'User registered', token });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Benutzeranmeldung
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        const passwordIsValid = await comparePassword(password, user.password);
+        if (!passwordIsValid) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        const token = generateToken(user);
+        res.json({ message: 'Login successful', token });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Beispiel für eine geschützte Route
+router.get('/protected', authenticateToken, (req, res) => {
+    res.json({ message: 'This is a protected route', user: req.user });
+});
 
 
 
