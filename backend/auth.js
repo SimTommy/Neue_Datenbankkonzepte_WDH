@@ -8,8 +8,13 @@ async function comparePassword(enteredPassword, hashedPassword) {
 
 // JWT-Token generieren
 function generateToken(user) {
-    return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    return jwt.sign({ 
+        id: user._id, 
+        username: user.username,  
+        role: user.role 
+    }, process.env.JWT_SECRET, { expiresIn: '1h' });
 }
+
 
 // Authentifizierungs-Middleware
 function authenticateToken(req, res, next) {

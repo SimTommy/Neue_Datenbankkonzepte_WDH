@@ -13,6 +13,11 @@
     "nodemailer": "^6.9.13"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "start:prod": "dotenv -e .env.production node server.js",
+    "start:dev": "dotenv -e .env.local node server.js"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^7.4.2"
   }
 }
