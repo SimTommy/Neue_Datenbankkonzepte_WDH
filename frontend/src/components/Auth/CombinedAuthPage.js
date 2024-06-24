@@ -1,10 +1,11 @@
 import React from 'react';
 import Login from './Login';
 import Register from './Register';
+import './CombinedAuthPage.css';
 
 const CombinedAuthPage = () => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '20px' }}>
+    <div className="combined-auth">
       <Login />
       <Register />
     </div>

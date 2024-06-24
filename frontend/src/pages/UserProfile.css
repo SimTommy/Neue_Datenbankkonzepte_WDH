@@ -1,0 +1,23 @@
+/* src/styles/UserProfile.css */
+.user-profile {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+  
+  .user-profile p, .user-profile h3 {
+    margin: 0;
+    padding: 0 10px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .user-profile .welcome {
+    font-weight: bold;
+  }
+  
+  .user-profile .role {
+    font-style: italic;
+    color: #555;
+  }
+  

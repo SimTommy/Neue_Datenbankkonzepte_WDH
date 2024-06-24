@@ -1,6 +1,5 @@
-// AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode'; 
+import {jwtDecode} from 'jwt-decode'; 
 
 const AuthContext = createContext();
 
@@ -14,7 +13,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const decoded = jwtDecode(token);
-          setUser({ username: decoded.username, role: decoded.role });
+          setUser({ id: decoded.id, username: decoded.username, role: decoded.role });
         } catch (error) {
           console.error("Token decode error:", error);
         }

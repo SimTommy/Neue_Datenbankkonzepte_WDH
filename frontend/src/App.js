@@ -1,29 +1,31 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import HomePage from './pages/homepage';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import NotFound from './pages/NotFound';
 import Logout from './components/Auth/LogOut';
 import CombinedAuthPage from './components/Auth/CombinedAuthPage';
-import UserProfile from './pages/UserProfile';
 import { AuthProvider } from './AuthContext';
+import Header from './components/Layout/Header';
+import Footer from './components/Layout/Footer';
+import HomePage from './pages/homepage';
+import EventPage from './components/Events/EventPage';
+import EventDetails from './components/Events/EventDetails';
+import './App.css';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/auth">Auth</Link>
-            <Link to="/logout">Logout</Link>
-            <UserProfile />
-          </nav>
+          <Header />
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/events" element={<EventPage />} />
             <Route path="/auth" element={<CombinedAuthPage />} />
             <Route path="/logout" element={<Logout />} />
+            <Route path="/events/:id" element={<EventDetails />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Footer />
         </div>
       </Router>
     </AuthProvider>
