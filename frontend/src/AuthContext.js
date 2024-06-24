@@ -1,3 +1,4 @@
+// AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {jwtDecode} from 'jwt-decode'; 
 
@@ -7,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Funktion, um den aktuellen Token zu prüfen und den Benutzer zu setzen
     const checkToken = () => {
       const token = localStorage.getItem('token');
       if (token) {
@@ -22,7 +22,6 @@ export const AuthProvider = ({ children }) => {
 
     checkToken();
 
-    // Event Listener, der bei Änderungen im Local Storage reagiert
     window.addEventListener('storage', checkToken);
 
     return () => {

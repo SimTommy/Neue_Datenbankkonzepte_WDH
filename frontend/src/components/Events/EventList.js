@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; 
 import EventForm from './EventForm';
 import { useAuth } from '../../AuthContext';
 import './EventList.css';
@@ -52,7 +52,8 @@ const EventList = () => {
   };
 
   const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase())
+    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -75,7 +76,8 @@ const EventList = () => {
             <p>{new Date(event.startTime).toLocaleString()}</p>
             <p>Location: {event.location}</p>
             <p>Organizer: {event.organizer.username}</p>
-            <Link to={`/events/${event._id}`}>View Details</Link> {/* Korrigierter Link */}
+            <p>Tags: {event.tags.join(', ')}</p>
+            <Link to={`/events/${event._id}`}>View Details</Link>
             {user && (user.role === 'admin' || user.role === 'organizer') && (
               <button onClick={() => handleDelete(event._id)}>Delete</button>
             )}

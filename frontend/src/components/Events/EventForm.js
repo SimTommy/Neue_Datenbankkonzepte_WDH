@@ -11,7 +11,8 @@ const EventForm = ({ event, onSave }) => {
     startTime: event ? event.startTime : '',
     endTime: event ? event.endTime : '',
     location: event ? event.location : '',
-    organizer: user ? user.id : ''  // Ensure organizer is set
+    tags: event ? event.tags.join(', ') : '', 
+    organizer: user ? user.id : ''
   });
 
   const handleChange = (e) => {
@@ -23,7 +24,11 @@ const EventForm = ({ event, onSave }) => {
     try {
       const url = event ? `http://localhost:4000/api/events/${event._id}` : 'http://localhost:4000/api/events';
       const method = event ? 'put' : 'post';
-      const eventData = { ...formData, organizer: user.id }; // Add organizer to the event data
+      const eventData = { 
+        ...formData, 
+        organizer: user.id,
+        tags: formData.tags.split(',').map(tag => tag.trim()) 
+      }; 
       await axios[method](url, eventData, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
@@ -44,6 +49,7 @@ const EventForm = ({ event, onSave }) => {
       <input type="datetime-local" name="startTime" placeholder="Start Time" value={formData.startTime} onChange={handleChange} required />
       <input type="datetime-local" name="endTime" placeholder="End Time" value={formData.endTime} onChange={handleChange} required />
       <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} required />
+      <input type="text" name="tags" placeholder="Tags (comma separated)" value={formData.tags} onChange={handleChange} /> {/* Input für Tags */}
       <button type="submit">Save Event</button>
     </form>
   );

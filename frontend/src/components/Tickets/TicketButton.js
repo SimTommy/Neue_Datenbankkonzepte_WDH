@@ -11,9 +11,11 @@ const TicketButton = ({ eventId, onPurchase }) => {
       await axios.post(`http://localhost:4000/api/events/${eventId}/tickets`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
+      alert('Ticket successfully purchased!');
       onPurchase();
     } catch (error) {
-      console.error('Error purchasing ticket:', error.response.data);
+      console.error('Error purchasing ticket:', error);
+      alert('Failed to purchase ticket.');
     }
   };
 
@@ -22,7 +24,7 @@ const TicketButton = ({ eventId, onPurchase }) => {
   }
 
   return (
-    <button className="ticket-button" onClick={handlePurchase}>Buy Ticket</button>
+    <button onClick={handlePurchase} className='ticket-button'>Purchase Ticket</button>
   );
 };
 

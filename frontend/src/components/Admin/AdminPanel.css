@@ -1,0 +1,45 @@
+.admin-panel {
+    padding: 20px;
+  }
+  
+  .admin-panel h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+  
+  .admin-panel section {
+    margin-bottom: 40px;
+  }
+  
+  .admin-panel h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+  }
+  
+  .admin-panel ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .admin-panel li {
+    background: #f9f9f9;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .admin-panel button {
+    background: #ff4b4b;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .admin-panel button:hover {
+    background: #e04343;
+  }
+  
