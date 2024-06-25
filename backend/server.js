@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { connect } = require('./database'); 
 const routes = require('./routes'); // Import der Routen
 
@@ -14,6 +15,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json()); // Ermöglicht das Parsen von JSON-body Requests
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Routen verwenden
 app.use('/api', routes); // Alle API-Routen sind jetzt unter dem Präfix /api verfügbar

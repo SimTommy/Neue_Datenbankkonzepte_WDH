@@ -1,45 +1,74 @@
+/* EventDetails.css */
 .event-details {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    margin-bottom: 100px;
-  }
-  
-  .event-details h2 {
-    margin-top: 0;
-  }
-  
-  .event-details p {
-    margin: 5px 0;
-  }
-  
-  .event-details h3 {
-    margin-top: 20px;
-  }
-  
-  .event-details ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .event-details li {
-    background: #f9f9f9;
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 4px;
-  }
-  
-  .back-button {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-  }
-  
-  .back-button:hover {
-    background-color: #0056b3;
-  }
-  
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  margin-bottom: 100px;
+}
+
+.event-details h2 {
+  margin-top: 0;
+}
+
+.event-details p {
+  margin: 5px 0;
+}
+
+.event-details h3 {
+  margin-top: 20px;
+}
+
+.event-details ul {
+  list-style: none;
+  padding: 0;
+}
+
+.event-details li {
+  background: #f9f9f9;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.back-button {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.back-button:hover {
+  background-color: #0056b3;
+}
+
+.upload-buttons input[type="file"] {
+  display: none;
+}
+
+.upload-buttons label {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.upload-buttons label:hover {
+  background-color: #0056b3;
+}
+
+.upload-button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.upload-button:hover {
+  background-color: #218838;
+}

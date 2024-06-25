@@ -1,0 +1,26 @@
+.carousel-item img,
+.carousel-item video {
+    max-height: 400px;
+    object-fit: contain;
+    width: 100%;
+}
+
+.carousel-item a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.carousel-item a:hover {
+    text-decoration: underline;
+}
+
+.pdf-icon {
+    font-size: 4rem;
+    margin-bottom: 10px;
+}

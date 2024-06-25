@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path'); // Stellen Sie sicher, dass 'path' importiert wird
 
 // Vordefinierte Schemata
 const User = require('./models/User');
@@ -8,7 +9,7 @@ const Comment = require('./models/Comment');
 const Ticket = require('./models/Ticket');
 
 // Funktionen
-const upload = require('./imageupload');
+const upload = require('./mediaupload');
 const { comparePassword, generateToken, authenticateToken } = require('./auth');
 const { sendEmail } = require('./notifications'); // Für die E-Mail notifs
 
@@ -172,12 +173,22 @@ router.get('/events/:id', async (req, res) => {
 });
 
 // Veranstaltung aktualisieren
-router.put('/events/:id', async (req, res) => {
+router.put('/events/:id', authenticateToken, async (req, res) => {
     try {
-        const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const event = await Event.findById(req.params.id);
+
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
         }
+
+        // Überprüfen, ob der Benutzer der Organisator des Events oder ein Admin ist
+        if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'You are not authorized to update this event' });
+        }
+
+        Object.assign(event, req.body);
+        await event.save();
+        
         res.json(event);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -210,24 +221,54 @@ router.delete('/events/:id', authenticateToken, async (req, res) => {
 
 //------------Bilder Hochladen -----------------------
 
-// Route zum Hochladen von Bildern zu einem Event
-router.post('/events/:id/upload', upload.single('image'), async (req, res) => {
+// Route zum Hochladen von Medien zu einem Event
+router.post('/events/:id/upload', upload.fields([
+    { name: 'images', maxCount: 5 },
+    { name: 'videos', maxCount: 5 },
+    { name: 'documents', maxCount: 5 }
+]), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Kein Bild zum Hochladen erhalten' });
-        }
-
+        console.log('Uploading media for event ID:', req.params.id); // Debugging statement
         const event = await Event.findById(req.params.id);
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
         }
-        event.images.push(req.file.path); // Bildpfad zum Event hinzufügen
+
+        // Initialize arrays if not present
+        event.images = event.images || [];
+        event.videos = event.videos || [];
+        event.documents = event.documents || [];
+
+        if (req.files['images']) {
+            event.images.push(...req.files['images'].map(file => `/uploads/${file.filename}`));
+            console.log('Uploaded images:', event.images); // Debugging statement
+        }
+
+        if (req.files['videos']) {
+            event.videos.push(...req.files['videos'].map(file => `/uploads/${file.filename}`));
+            console.log('Uploaded videos:', event.videos); // Debugging statement
+        }
+
+        if (req.files['documents']) {
+            event.documents.push(...req.files['documents'].map(file => `/uploads/${file.filename}`));
+            console.log('Uploaded documents:', event.documents); // Debugging statement
+        }
+
         await event.save();
-        res.status(200).json({ message: 'Image uploaded successfully', path: req.file.path });
+        res.status(200).json({ message: 'Media uploaded successfully', paths: req.files });
     } catch (error) {
+        console.error('Error uploading media:', error); // Debugging statement
         res.status(500).json({ message: error.message });
     }
 });
+
+// Route zum Abrufen eines Bildes
+router.get('/uploads/:filename', (req, res) => {
+    const filepath = path.join(__dirname, './public/uploads', req.params.filename);
+    console.log('Fetching file:', filepath); // Debugging statement
+    res.sendFile(filepath);
+});
+
 
 // Route zum Abrufen eines Bildes für ein bestimmtes Event | Path könnte falsch sein
 router.get('/events/:id/images/:filename', async (req, res) => {
@@ -242,7 +283,7 @@ router.get('/events/:id/images/:filename', async (req, res) => {
             return res.status(404).json({ message: 'Image not found for this event' });
         }
 
-        const imagePath = path.join(__dirname, '../public/uploads', filename);
+        const imagePath = path.join(__dirname, './public/uploads', filename);
 
         fs.access(imagePath, fs.constants.F_OK, (err) => {
             if (err) {
@@ -331,14 +372,29 @@ router.get('/comments/:commentId', async (req, res) => {
 });
 
 // Einzelnen Kommentar bearbeiten / updaten
-router.put('/comments/:commentId', async (req, res) => {
+router.put('/events/:eventId/comments/:commentId', authenticateToken, async (req, res) => {
     try {
-        const { commentId } = req.params;
-        const updatedComment = await Comment.findByIdAndUpdate(commentId, req.body, { new: true, runValidators: true });
-        if (!updatedComment) {
+        const { eventId, commentId } = req.params;
+        const event = await Event.findById(eventId);
+
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        const comment = event.comments.id(commentId);
+        if (!comment) {
             return res.status(404).json({ message: 'Comment not found' });
         }
-        res.json(updatedComment);
+
+        // Überprüfen, ob der Benutzer der Autor des Kommentars ist
+        if (comment.author.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'You are not authorized to update this comment' });
+        }
+
+        Object.assign(comment, req.body);
+        await event.save();
+        
+        res.json(comment);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -381,6 +437,50 @@ router.delete('/comments', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+// Route zum Hochladen von Medien zu einem Kommentar
+router.post('/events/:eventId/comments/:commentId/upload', upload.fields([
+    { name: 'images', maxCount: 5 },
+    { name: 'videos', maxCount: 5 },
+    { name: 'documents', maxCount: 5 }
+  ]), authenticateToken, async (req, res) => {
+      try {
+          const { eventId, commentId } = req.params;
+          const event = await Event.findById(eventId);
+  
+          if (!event) {
+              return res.status(404).json({ message: 'Event not found' });
+          }
+  
+          const comment = event.comments.id(commentId);
+          if (!comment) {
+              return res.status(404).json({ message: 'Comment not found' });
+          }
+  
+          // Überprüfen, ob der Benutzer der Autor des Kommentars ist
+          if (comment.author.toString() !== req.user.id) {
+              return res.status(403).json({ message: 'You are not authorized to upload media to this comment' });
+          }
+  
+          if (req.files['images']) {
+              comment.images.push(...req.files['images'].map(file => file.path));
+          }
+  
+          if (req.files['videos']) {
+              comment.videos.push(...req.files['videos'].map(file => file.path));
+          }
+  
+          if (req.files['documents']) {
+              comment.documents.push(...req.files['documents'].map(file => file.path));
+          }
+  
+          await event.save();
+          res.status(200).json({ message: 'Media uploaded successfully', paths: req.files });
+      } catch (error) {
+          res.status(500).json({ message: error.message });
+      }
+  });
+  
 
 //------------------ Tickets -------------------
 
