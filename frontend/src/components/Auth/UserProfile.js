@@ -66,6 +66,21 @@ const UserProfile = () => {
     }
   };
 
+  const handleCancelTicket = async (ticketId) => {
+    try {
+      await axios.delete(`http://localhost:4000/api/tickets/${ticketId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setActivities(prevActivities => ({
+        ...prevActivities,
+        tickets: prevActivities.tickets.filter(ticket => ticket._id !== ticketId)
+      }));
+    } catch (error) {
+      console.error('Error canceling ticket:', error.response.data);
+    }
+  };
+  
+
   if (!profile) {
     return <p>Loading...</p>;
   }
@@ -84,7 +99,10 @@ const UserProfile = () => {
         <h3>Tickets</h3>
         <ul>
           {activities.tickets.map(ticket => (
-            <li key={ticket._id}>{ticket.event.title} - {new Date(ticket.purchaseDate).toLocaleString()}</li>
+            <li key={ticket._id}>
+              {ticket.event.title} - {new Date(ticket.purchaseDate).toLocaleString()}
+              <button onClick={() => handleCancelTicket(ticket._id)}>Cancel Ticket</button>
+            </li>
           ))}
         </ul>
         <h3>Comments</h3>

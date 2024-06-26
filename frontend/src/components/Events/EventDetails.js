@@ -119,7 +119,9 @@ const EventDetails = () => {
       <h3>Participants:</h3>
       <ul>
         {event.participants.map((participant, index) => (
-          <li key={participant._id || `participant-${index}`}>{participant.username} ({participant.email})</li>
+          <li key={participant._id || `participant-${index}`}>
+            {participant.username} ({participant.email})
+          </li>
         ))}
       </ul>
       <h3>Comments:</h3>

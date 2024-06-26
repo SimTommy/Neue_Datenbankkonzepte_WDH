@@ -120,6 +120,31 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Route zum Ändern der Benutzerrolle
+router.put('/users/:id/role', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Only admins can change roles' });
+        }
+        
+        const { role } = req.body;
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { role },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json(updatedUser);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+
 // Beispiel für eine geschützte Route
 router.get('/protected', authenticateToken, (req, res) => {
     res.json({ message: 'This is a protected route', user: req.user });
@@ -665,6 +690,35 @@ router.get('/users/:userId/tickets', authenticateToken, async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+// Einzelnes Ticket löschen (Stornieren)
+router.delete('/tickets/:ticketId', authenticateToken, async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.ticketId);
+
+        if (!ticket) {
+            return res.status(404).json({ message: 'Ticket not found' });
+        }
+
+        // Überprüfen, ob der Benutzer der Besitzer des Tickets oder ein Admin ist
+        if (ticket.holder.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'You are not authorized to delete this ticket' });
+        }
+
+        const event = await Event.findById(ticket.event);
+        if (event) {
+            event.participants = event.participants.filter(participant => participant.toString() !== ticket.holder.toString());
+            await event.save();
+        }
+
+        await Ticket.findByIdAndDelete(req.params.ticketId);
+        res.json({ message: 'Ticket deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 
 //----------- E-Mail Erinnerung Event ------------
 // Wird vermutlich erst möglich sein, wenn wir eine trash mail verwenden auf die jeder zugriff hat. selbe bei .env dann einstellen und testen

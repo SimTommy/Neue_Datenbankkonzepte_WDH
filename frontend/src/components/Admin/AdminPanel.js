@@ -87,6 +87,17 @@ const AdminPanel = () => {
     }
   };
 
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await axios.put(`http://localhost:4000/api/users/${userId}/role`, { role: newRole }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setUsers(users.map(user => user._id === userId ? { ...user, role: newRole } : user));
+    } catch (error) {
+      console.error('Error changing user role:', error.response.data);
+    }
+  };
+
   const handleDeleteComment = async (commentId) => {
     try {
       await axios.delete(`http://localhost:4000/api/comments/${commentId}`, {
@@ -134,6 +145,14 @@ const AdminPanel = () => {
             <li key={user._id}>
               {user.username} ({user.email}) - {user.role}
               <button onClick={() => handleDeleteUser(user._id)}>Delete</button>
+              <select
+                value={user.role}
+                onChange={(e) => handleRoleChange(user._id, e.target.value)}
+              >
+                <option value="participant">Participant</option>
+                <option value="organizer">Organizer</option>
+                <option value="admin">Admin</option>
+              </select>
             </li>
           ))}
         </ul>
