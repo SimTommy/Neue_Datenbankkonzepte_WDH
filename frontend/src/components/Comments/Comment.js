@@ -53,7 +53,7 @@ const Comment = ({ comment, eventId, onCommentUpdated, onCommentDeleted }) => {
       ) : (
         <div>
           <strong>{comment.author.username}:</strong> {comment.content}
-          {(user && (user._id === comment.author._id || user.role === 'admin')) && (
+          {(user && (user.id === comment.author._id || user.role === 'admin')) && (
             <div>
               <button onClick={handleEditComment}>Edit</button>
               <button onClick={handleDeleteComment}>Delete</button>

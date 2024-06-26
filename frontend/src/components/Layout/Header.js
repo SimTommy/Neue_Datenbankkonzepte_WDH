@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import UserProfile from '../../pages/UserProfile';
 import { useAuth } from '../../AuthContext';
 import './Header.css';
 
@@ -15,7 +14,7 @@ const Header = () => {
         <Link to="/auth">Auth</Link>
         <Link to="/logout">Logout</Link>
         {user && user.role === 'admin' && <Link to="/admin">Admin Panel</Link>}
-        <UserProfile />
+        {user && <Link to="/profile">Profile</Link>}
       </nav>
     </header>
   );

@@ -12,6 +12,7 @@ const Ticket = require('./models/Ticket');
 const upload = require('./mediaupload');
 const { comparePassword, generateToken, authenticateToken } = require('./auth');
 const { sendEmail } = require('./notifications'); // Für die E-Mail notifs
+const { getProfile, updateProfile, userProfileUpload, uploadProfileImage, getUserActivities } = require('./userProfileLogic');
 
 //---------------------User Routen-------------------------
 
@@ -123,6 +124,25 @@ router.post('/login', async (req, res) => {
 router.get('/protected', authenticateToken, (req, res) => {
     res.json({ message: 'This is a protected route', user: req.user });
 });
+
+
+// Profil-Route
+router.get('/profile', authenticateToken, getProfile);
+
+// Route zum Aktualisieren des Benutzerprofils
+router.put('/profile', authenticateToken, updateProfile);
+
+// Route zum Hochladen eines Profilbilds
+router.post('/profile/upload', authenticateToken, userProfileUpload.single('profileImage'), uploadProfileImage);
+
+// Route zum Abrufen von Benutzeraktivitäten
+router.get('/profile/activities', authenticateToken, getUserActivities);
+
+
+
+
+
+
 
 //--------------------- Event Routen -----------------------------
 // Veranstaltung erstellen
@@ -360,31 +380,36 @@ router.post('/events/:id/remove-media', authenticateToken, async (req, res) => {
 
 //---------------- Kommentar Routen--------------------
 // Kommentar erstellen
-router.post('/events/:eventId/comments', async (req, res) => {
+router.post('/events/:eventId/comments', authenticateToken, async (req, res) => {
     try {
-        const { content, author } = req.body;
+        const { content } = req.body;
         const { eventId } = req.params;
 
-        // Überprüfen, ob das Event existiert
         const event = await Event.findById(eventId);
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        const newComment = {
+        const newComment = new Comment({
             content,
-            author,
-            createdAt: Date.now()
-        };
+            author: req.user.id,
+            event: eventId
+        });
 
         event.comments.push(newComment);
         await event.save();
+        await newComment.save();
+
+        const user = await User.findById(req.user.id);
+        user.postedComments.push(newComment._id);
+        await user.save();
 
         res.status(201).json(newComment);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 });
+
 
 // Alle Kommentare zu einem bestimmten Event abrufen
 router.get('/events/:eventId/comments', async (req, res) => {
@@ -415,6 +440,7 @@ router.get('/comments', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
 
 // Einzelnen Kommentar abrufen
 router.get('/comments/:commentId', async (req, res) => {
@@ -462,16 +488,11 @@ router.put('/events/:eventId/comments/:commentId', authenticateToken, async (req
 });
 
 // Einzelnen Kommentar löschen
-router.delete('/events/:eventId/comments/:commentId', authenticateToken, async (req, res) => {
+router.delete('/comments/:commentId', authenticateToken, async (req, res) => {
     try {
-        const { eventId, commentId } = req.params;
-        const event = await Event.findById(eventId);
+        const { commentId } = req.params;
 
-        if (!event) {
-            return res.status(404).json({ message: 'Event not found' });
-        }
-
-        const comment = event.comments.id(commentId);
+        const comment = await Comment.findById(commentId);
         if (!comment) {
             return res.status(404).json({ message: 'Comment not found' });
         }
@@ -481,13 +502,26 @@ router.delete('/events/:eventId/comments/:commentId', authenticateToken, async (
             return res.status(403).json({ message: 'You are not authorized to delete this comment' });
         }
 
-        event.comments.pull(commentId);
-        await event.save();
+        const event = await Event.findById(comment.event);
+        if (event) {
+            event.comments.pull(commentId);
+            await event.save();
+        }
+
+        await Comment.findByIdAndDelete(commentId);
+
+        const user = await User.findById(comment.author);
+        if (user) {
+            user.postedComments.pull(commentId);
+            await user.save();
+        }
+
         res.json({ message: 'Comment deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
+
 
 // Route to delete all comments
 router.delete('/comments', async (req, res) => {
@@ -557,15 +591,24 @@ router.get('/tickets', async (req, res) => {
     }
 });
 
-// Route to delete all tickets
+// Route zum Löschen aller Tickets und Aktualisieren des Events
 router.delete('/tickets', async (req, res) => {
     try {
+        const tickets = await Ticket.find();
+        for (const ticket of tickets) {
+            const event = await Event.findById(ticket.event);
+            if (event) {
+                event.participants = event.participants.filter(participant => participant.toString() !== ticket.holder.toString());
+                await event.save();
+            }
+        }
         await Ticket.deleteMany({});
         res.json({ message: 'All tickets deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
+
 
 // Veranstaltung löschen und zugehörige Tickets löschen
 router.delete('/events/:id', async (req, res) => {

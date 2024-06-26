@@ -11,6 +11,7 @@ import EventPage from './components/Events/EventPage';
 import EventDetails from './components/Events/EventDetails';
 import AdminPanel from './components/Admin/AdminPanel';
 import ProtectedRoute from './components/Admin/ProtectedRoute';
+import UserProfile from './components/Auth/UserProfile';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/auth" element={<CombinedAuthPage />} />
             <Route path="/logout" element={<Logout />} />
+            <Route path="/profile" element={<UserProfile />} />
             <Route path="/admin" element={
               <ProtectedRoute adminOnly={true}>
                 <AdminPanel />

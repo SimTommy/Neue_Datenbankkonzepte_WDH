@@ -8,6 +8,7 @@ const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [comments, setComments] = useState([]);
 
   const fetchTickets = async () => {
     try {
@@ -17,6 +18,17 @@ const AdminPanel = () => {
       setTickets(response.data);
     } catch (error) {
       console.error('Error fetching tickets:', error);
+    }
+  };
+
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/comments', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setComments(response.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
     }
   };
 
@@ -47,6 +59,7 @@ const AdminPanel = () => {
       fetchUsers();
       fetchEvents();
       fetchTickets();
+      fetchComments();
     }
   }, [user]);
 
@@ -67,10 +80,21 @@ const AdminPanel = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setEvents(events.filter(event => event._id !== eventId));
-      // Nach dem Löschen eines Events, Tickets erneut abrufen
       fetchTickets();
+      fetchComments(); // Abrufen der Kommentare nach dem Löschen eines Events
     } catch (error) {
       console.error('Error deleting event:', error.response.data);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await axios.delete(`http://localhost:4000/api/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setComments(comments.filter(comment => comment._id !== commentId));
+    } catch (error) {
+      console.error('Error deleting comment:', error.response.data);
     }
   };
 
@@ -79,7 +103,7 @@ const AdminPanel = () => {
       await axios.delete('http://localhost:4000/api/comments', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      // Hier keine Kommentare mehr setzen, da sie nicht mehr im Admin-Panel angezeigt werden
+      setComments([]);
     } catch (error) {
       console.error('Error deleting all comments:', error.response.data);
     }
@@ -141,6 +165,16 @@ const AdminPanel = () => {
       <section>
         <h2>Comments</h2>
         <button onClick={handleDeleteAllComments}>Delete All Comments</button>
+        <ul>
+          {comments.map(comment => (
+            <li key={comment._id}>
+              Event: {comment.event ? comment.event.title : 'Unknown'}, 
+              Author: {comment.author ? comment.author.username : 'Unknown'}, 
+              Comment: {comment.content}
+              <button onClick={() => handleDeleteComment(comment._id)}>Delete</button>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

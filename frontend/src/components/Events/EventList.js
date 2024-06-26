@@ -78,7 +78,7 @@ const EventList = () => {
             <p>Organizer: {event.organizer.username}</p>
             <p>Tags: {event.tags.join(', ')}</p>
             <Link to={`/events/${event._id}`}>View Details</Link>
-            {user && (user.role === 'admin' || user.role === 'organizer') && (
+            {user && (user.id === event.organizer._id || user.role === 'admin') && (
               <button onClick={() => handleDelete(event._id)}>Delete</button>
             )}
           </li>

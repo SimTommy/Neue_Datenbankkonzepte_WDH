@@ -1,0 +1,58 @@
+.user-profile {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .user-profile h2 {
+    text-align: center;
+    margin-top: 0;
+  }
+  
+  .profile-header {
+    text-align: center;
+  }
+  
+  .profile-image-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  
+  .profile-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .profile-role {
+    font-size: 18px;
+    color: #555;
+  }
+  
+  input[type="file"] {
+    display: block;
+    margin: 10px auto;
+  }
+  
+  .profile-activities {
+    margin-top: 20px;
+  }
+  
+  .profile-activities h3 {
+    margin-top: 20px;
+  }
+  
+  .profile-activities ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .profile-activities li {
+    background: #f9f9f9;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  

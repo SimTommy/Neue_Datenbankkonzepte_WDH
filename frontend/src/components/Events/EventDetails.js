@@ -30,7 +30,7 @@ const EventDetails = () => {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await axios.delete(`http://localhost:4000/api/events/${id}/comments/${commentId}`, {
+      await axios.delete(`http://localhost:4000/api/comments/${commentId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       fetchEvent();
@@ -78,17 +78,15 @@ const EventDetails = () => {
 
   const handleEditEvent = (updatedEvent) => {
     setEvent(updatedEvent);
-    setShowEditModal(false)
+    setShowEditModal(false);
   };
 
   const handleRemoveMedia = async (mediaType, mediaPath) => {
-    const relativePath = mediaPath.replace('http://localhost:4000', ''); // Entferne die Base-URL
+    const relativePath = mediaPath.replace('http://localhost:4000', '');
     try {
-      console.log('Removing media:', { mediaType, mediaPath: relativePath });
       const response = await axios.post(`http://localhost:4000/api/events/${id}/remove-media`, { mediaType, mediaPath: relativePath }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      console.log('Media removed successfully:', response.data);
       fetchEvent();
     } catch (error) {
       console.error('Error removing media:', error.response.data);
@@ -129,7 +127,7 @@ const EventDetails = () => {
         {event.comments.map((comment, index) => (
           <li key={comment._id || `comment-${index}`}>
             <strong>{comment.author.username}:</strong> {comment.content}
-            {(user && (user._id === comment.author._id || user.role === 'admin')) && (
+            {(user && (user.id === comment.author._id || user.role === 'admin')) && (
               <button onClick={() => handleDeleteComment(comment._id)}>Delete</button>
             )}
           </li>
@@ -137,7 +135,7 @@ const EventDetails = () => {
       </ul>
       <TicketButton eventId={event._id} onPurchase={fetchEvent} />
       <CommentForm eventId={event._id} onCommentAdded={fetchEvent} />
-      {user && (user._id === event.organizer._id || user.role === 'admin') && (
+      {user && (user.id === event.organizer._id || user.role === 'admin') && (
         <>
           <button onClick={() => setShowEditModal(true)}>Edit Event</button>
           <button onClick={handleDeleteEvent}>Delete Event</button>
