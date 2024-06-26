@@ -1,5 +1,5 @@
 # Verwendung des Node-Images 21.7.3 als Basis
-FROM node:21.7.3-alpine3.18
+FROM node:22-alpine3.19
 
 # Setzen Sie das Arbeitsverzeichnis im Container
 WORKDIR /app
@@ -21,4 +21,3 @@ RUN npm install -g serve
 
 # Starten Sie den Webserver
 CMD ["serve", "-s", "build"]
-
