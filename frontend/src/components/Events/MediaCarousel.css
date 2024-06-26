@@ -1,26 +1,47 @@
-.carousel-item img,
-.carousel-item video {
-    max-height: 400px;
-    object-fit: contain;
-    width: 100%;
-}
-
-.carousel-item a {
+.carousel-item {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
+  }
+  
+  .carousel-item img,
+  .carousel-item video {
+    max-height: 400px;
+    object-fit: contain;
+    width: 100%;
+  }
+  
+  .carousel-item a {
+    display: inline-block;
     margin-top: 10px;
     font-size: 16px;
     color: #007bff;
     text-decoration: none;
-}
-
-.carousel-item a:hover {
+  }
+  
+  .carousel-item a:hover {
     text-decoration: underline;
-}
-
-.pdf-icon {
-    font-size: 4rem;
-    margin-bottom: 10px;
-}
+  }
+  
+  .pdf-icon {
+    font-size: 48px;
+    color: #ff0000;
+  }
+  
+  .remove-media {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: #fff;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1;
+  }
+  
+  .remove-media:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+  

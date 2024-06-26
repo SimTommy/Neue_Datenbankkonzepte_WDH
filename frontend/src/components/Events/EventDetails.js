@@ -5,6 +5,7 @@ import TicketButton from '../Tickets/TicketButton';
 import CommentForm from '../Comments/CommentForm';
 import MediaCarousel from './MediaCarousel';
 import { useAuth } from '../../AuthContext';
+import EditEventModal from './EditEventModal';
 import './EventDetails.css';
 
 const EventDetails = () => {
@@ -12,11 +13,11 @@ const EventDetails = () => {
   const { user } = useAuth();
   const [event, setEvent] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState({ images: [], videos: [], documents: [] });
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const fetchEvent = useCallback(async () => {
     try {
       const response = await axios.get(`http://localhost:4000/api/events/${id}`);
-      console.log('Fetched event data:', response.data); // Debugging statement
       setEvent(response.data);
     } catch (error) {
       console.error('Error fetching event:', error);
@@ -55,7 +56,6 @@ const EventDetails = () => {
       ...prevFiles,
       [name]: files,
     }));
-    console.log('Selected files:', selectedFiles); // Debugging statement
   };
 
   const handleUpload = async () => {
@@ -70,10 +70,28 @@ const EventDetails = () => {
       await axios.post(`http://localhost:4000/api/events/${id}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      console.log('Files uploaded successfully'); // Debugging statement
       fetchEvent();
     } catch (error) {
       console.error('Error uploading files:', error.response.data);
+    }
+  };
+
+  const handleEditEvent = (updatedEvent) => {
+    setEvent(updatedEvent);
+    setShowEditModal(false)
+  };
+
+  const handleRemoveMedia = async (mediaType, mediaPath) => {
+    const relativePath = mediaPath.replace('http://localhost:4000', ''); // Entferne die Base-URL
+    try {
+      console.log('Removing media:', { mediaType, mediaPath: relativePath });
+      const response = await axios.post(`http://localhost:4000/api/events/${id}/remove-media`, { mediaType, mediaPath: relativePath }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      console.log('Media removed successfully:', response.data);
+      fetchEvent();
+    } catch (error) {
+      console.error('Error removing media:', error.response.data);
     }
   };
 
@@ -84,7 +102,6 @@ const EventDetails = () => {
   const images = event.images || [];
   const videos = event.videos || [];
   const documents = event.documents || [];
-  console.log('Media for carousel:', { images, videos, documents }); // Debugging statement
 
   return (
     <div className="event-details">
@@ -93,17 +110,24 @@ const EventDetails = () => {
       <p>{new Date(event.startTime).toLocaleString()} - {new Date(event.endTime).toLocaleString()}</p>
       <p>Location: {event.location}</p>
       <p>Organizer: {event.organizer.username}</p>
-      <MediaCarousel media={[...images.map(path => ({ path: `http://localhost:4000${path}`, type: 'image' })), ...videos.map(path => ({ path: `http://localhost:4000${path}`, type: 'video' })), ...documents.map(path => ({ path: `http://localhost:4000${path}`, type: 'document' }))]} />
+      <MediaCarousel
+        media={[
+          ...images.map((path, index) => ({ path: `http://localhost:4000${path}`, type: 'image', key: `image-${index}` })),
+          ...videos.map((path, index) => ({ path: `http://localhost:4000${path}`, type: 'video', key: `video-${index}` })),
+          ...documents.map((path, index) => ({ path: `http://localhost:4000${path}`, type: 'document', key: `document-${index}` }))
+        ]}
+        onRemoveMedia={handleRemoveMedia}
+      />
       <h3>Participants:</h3>
       <ul>
-        {event.participants.map(participant => (
-          <li key={participant._id}>{participant.username} ({participant.email})</li>
+        {event.participants.map((participant, index) => (
+          <li key={participant._id || `participant-${index}`}>{participant.username} ({participant.email})</li>
         ))}
       </ul>
       <h3>Comments:</h3>
       <ul>
-        {event.comments.map(comment => (
-          <li key={comment._id}>
+        {event.comments.map((comment, index) => (
+          <li key={comment._id || `comment-${index}`}>
             <strong>{comment.author.username}:</strong> {comment.content}
             {(user && (user._id === comment.author._id || user.role === 'admin')) && (
               <button onClick={() => handleDeleteComment(comment._id)}>Delete</button>
@@ -114,17 +138,27 @@ const EventDetails = () => {
       <TicketButton eventId={event._id} onPurchase={fetchEvent} />
       <CommentForm eventId={event._id} onCommentAdded={fetchEvent} />
       {user && (user._id === event.organizer._id || user.role === 'admin') && (
-        <button onClick={handleDeleteEvent}>Delete Event</button>
+        <>
+          <button onClick={() => setShowEditModal(true)}>Edit Event</button>
+          <button onClick={handleDeleteEvent}>Delete Event</button>
+          <div className="upload-buttons">
+            <label htmlFor="upload-images">Upload Images</label>
+            <input type="file" id="upload-images" name="images" multiple onChange={handleFileChange} />
+            <label htmlFor="upload-videos">Upload Videos</label>
+            <input type="file" id="upload-videos" name="videos" multiple onChange={handleFileChange} />
+            <label htmlFor="upload-documents">Upload Documents</label>
+            <input type="file" id="upload-documents" name="documents" multiple onChange={handleFileChange} />
+            <button className="upload-button" onClick={handleUpload}>Upload</button>
+            <p className="upload-instructions">Please use the respective buttons to upload images, videos, or documents, and click 'Upload' to save them.</p>
+          </div>
+        </>
       )}
-      <div className="upload-buttons">
-        <label htmlFor="upload-images">Upload Images</label>
-        <input type="file" id="upload-images" name="images" multiple onChange={handleFileChange} />
-        <label htmlFor="upload-videos">Upload Videos</label>
-        <input type="file" id="upload-videos" name="videos" multiple onChange={handleFileChange} />
-        <label htmlFor="upload-documents">Upload Documents</label>
-        <input type="file" id="upload-documents" name="documents" multiple onChange={handleFileChange} />
-        <button className="upload-button" onClick={handleUpload}>Upload</button>
-      </div>
+      <EditEventModal
+        show={showEditModal}
+        event={event}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleEditEvent}
+      />
       <Link to="/events" className="back-button">Go Back to Event List</Link>
     </div>
   );

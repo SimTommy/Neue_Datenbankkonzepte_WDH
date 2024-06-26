@@ -175,6 +175,9 @@ router.get('/events/:id', async (req, res) => {
 // Veranstaltung aktualisieren
 router.put('/events/:id', authenticateToken, async (req, res) => {
     try {
+        console.log('Received update request for event ID:', req.params.id);
+        console.log('Request body:', req.body); // Debugging output
+
         const event = await Event.findById(req.params.id);
 
         if (!event) {
@@ -186,14 +189,33 @@ router.put('/events/:id', authenticateToken, async (req, res) => {
             return res.status(403).json({ message: 'You are not authorized to update this event' });
         }
 
-        Object.assign(event, req.body);
+        // Update the event fields
+        event.title = req.body.title;
+        event.description = req.body.description;
+        event.location = req.body.location;
+        event.startTime = req.body.startTime;
+        event.endTime = req.body.endTime;
+
+        // Ensure participants array is maintained
+        if (!req.body.participants) {
+            event.participants = event.participants;
+        }
+
         await event.save();
-        
-        res.json(event);
+
+        // Populate the organizer and participants fields before sending response
+        const updatedEvent = await Event.findById(req.params.id)
+            .populate('organizer', 'username email')
+            .populate('participants', 'username email');
+
+        res.json(updatedEvent);
     } catch (error) {
+        console.error('Error updating event:', error);
         res.status(400).json({ message: error.message });
     }
 });
+
+
 
 // Veranstaltung löschen und zugehörige Tickets und Kommentare löschen
 router.delete('/events/:id', authenticateToken, async (req, res) => {
@@ -296,6 +318,45 @@ router.get('/events/:id/images/:filename', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+// Route zum Entfernen von Medien
+router.post('/events/:id/remove-media', authenticateToken, async (req, res) => {
+    try {
+        const { mediaType, mediaPath } = req.body;
+        console.log('Removing media:', { mediaType, mediaPath, eventId: req.params.id }); // Debugging statement
+        const event = await Event.findById(req.params.id);
+
+        if (!event) {
+            console.log('Event not found');
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        // Check if the user is the organizer or an admin
+        if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+            console.log('User not authorized to remove media');
+            return res.status(403).json({ message: 'You are not authorized to remove media from this event' });
+        }
+
+        if (mediaType === 'image') {
+            event.images = event.images.filter(path => path !== mediaPath);
+            console.log('Updated images:', event.images); // Debugging statement
+        } else if (mediaType === 'video') {
+            event.videos = event.videos.filter(path => path !== mediaPath);
+            console.log('Updated videos:', event.videos); // Debugging statement
+        } else if (mediaType === 'document') {
+            event.documents = event.documents.filter(path => path !== mediaPath);
+            console.log('Updated documents:', event.documents); // Debugging statement
+        }
+
+        await event.save();
+        res.json({ message: 'Media removed successfully' });
+    } catch (error) {
+        console.error('Error removing media:', error); // Debugging statement
+        res.status(500).json({ message: error.message });
+    }
+});
+  
+
 
 //---------------- Kommentar Routen--------------------
 // Kommentar erstellen
