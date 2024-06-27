@@ -10,7 +10,7 @@ const Logout = () => {
     localStorage.removeItem('token');
     alert('Sie wurden erfolgreich ausgeloggt! Token wurde entfernt.');
 
-    // Weiterleitung zur Homepage und Seite nach 3 Sekunden neu laden
+    // Weiterleitung zur Homepage und Seite nach 1 Sekunden neu laden
     navigate('/');
     setTimeout(() => {
       window.location.reload();

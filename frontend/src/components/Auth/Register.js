@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './Register.css'; // Importiere das CSS für das Register-Formular
+import './Register.css'; 
 
 function Register() {
     const [formData, setFormData] = useState({
@@ -19,7 +19,7 @@ function Register() {
         try {
             const response = await axios.post('http://localhost:4000/api/register', formData);
             console.log('Registered:', response.data);
-            // Redirect to login or dashboard
+            // Redirect zu login oder dashboard
         } catch (error) {
             if (error.response) {
                 console.error('Registration error:', error.response.data);

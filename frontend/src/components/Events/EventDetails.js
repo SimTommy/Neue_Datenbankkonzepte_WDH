@@ -7,7 +7,7 @@ import MediaCarousel from './MediaCarousel';
 import { useAuth } from '../../AuthContext';
 import EditEventModal from './EditEventModal';
 import './EventDetails.css';
-import '../Comments/Comment.css'; // Importiere die CSS-Datei hier
+import '../Comments/Comment.css';
 
 const EventDetails = () => {
     const { id } = useParams();

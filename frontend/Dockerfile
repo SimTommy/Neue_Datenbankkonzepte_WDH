@@ -1,7 +1,7 @@
-# Verwendung des Node-Images 21.7.3 als Basis
+# Verwendung des Node-Images 22-alpine3.19 als Basis
 FROM node:22-alpine3.19
 
-# Setzen Sie das Arbeitsverzeichnis im Container
+# Setzen des Arbeitsverzeichnis im Container
 WORKDIR /app
 
 # Kopieren der 'package.json'-Datei und 'package-lock.json' (falls vorhanden)
@@ -19,5 +19,5 @@ RUN npm run build
 # Installieren eines Webservers, um das Frontend auszuliefern
 RUN npm install -g serve
 
-# Starten Sie den Webserver
+# Start des Webservers
 CMD ["serve", "-s", "build"]

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path'); // Stellen Sie sicher, dass 'path' importiert wird
+const path = require('path');
 
 // Vordefinierte Schemata
 const User = require('./models/User');
@@ -19,13 +19,13 @@ const { getProfile, updateProfile, userProfileUpload, uploadProfileImage, getUse
 
 // Neuen User hinzufügen
 router.post('/users', async (req, res) => {
-    console.log("Attempting to create a user with:", req.body);  // Log the incoming request body
+    console.log("Attempting to create a user with:", req.body);  
     try {
         const newUser = new User(req.body);
         const savedUser = await newUser.save();
         res.status(201).json(savedUser);
     } catch (error) {
-        console.error("Error creating user:", error.message);  // Log any errors
+        console.error("Error creating user:", error.message);  
         res.status(400).json({ message: error.message });
     }
 });
@@ -222,7 +222,7 @@ router.get('/events/:id', async (req, res) => {
 router.put('/events/:id', authenticateToken, async (req, res) => {
     try {
         console.log('Received update request for event ID:', req.params.id);
-        console.log('Request body:', req.body); // Debugging output
+        console.log('Request body:', req.body); // Debugging
 
         const event = await Event.findById(req.params.id);
 
@@ -235,21 +235,21 @@ router.put('/events/:id', authenticateToken, async (req, res) => {
             return res.status(403).json({ message: 'You are not authorized to update this event' });
         }
 
-        // Update the event fields
+        
         event.title = req.body.title;
         event.description = req.body.description;
         event.location = req.body.location;
         event.startTime = req.body.startTime;
         event.endTime = req.body.endTime;
 
-        // Ensure participants array is maintained
+        
         if (!req.body.participants) {
             event.participants = event.participants;
         }
 
         await event.save();
 
-        // Populate the organizer and participants fields before sending response
+        
         const updatedEvent = await Event.findById(req.params.id)
             .populate('organizer', 'username email')
             .populate('participants', 'username email');
@@ -302,7 +302,7 @@ router.post('/events/:id/upload', upload.fields([
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // Initialize arrays if not present
+        // Initializierung der Arrays wenn nicht präsent
         event.images = event.images || [];
         event.videos = event.videos || [];
         event.documents = event.documents || [];
@@ -338,7 +338,7 @@ router.get('/uploads/:filename', (req, res) => {
 });
 
 
-// Route zum Abrufen eines Bildes für ein bestimmtes Event | Path könnte falsch sein
+// Route zum Abrufen eines Bildes für ein bestimmtes Event 
 router.get('/events/:id/images/:filename', async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
