@@ -559,48 +559,81 @@ router.delete('/comments', async (req, res) => {
     }
 });
 
+//------------------ Routen für Kommentar-Medien-Upload ---------------------
+
 // Route zum Hochladen von Medien zu einem Kommentar
 router.post('/events/:eventId/comments/:commentId/upload', upload.fields([
     { name: 'images', maxCount: 5 },
     { name: 'videos', maxCount: 5 },
     { name: 'documents', maxCount: 5 }
-  ]), authenticateToken, async (req, res) => {
-      try {
-          const { eventId, commentId } = req.params;
-          const event = await Event.findById(eventId);
-  
-          if (!event) {
-              return res.status(404).json({ message: 'Event not found' });
-          }
-  
-          const comment = event.comments.id(commentId);
-          if (!comment) {
-              return res.status(404).json({ message: 'Comment not found' });
-          }
-  
-          // Überprüfen, ob der Benutzer der Autor des Kommentars ist
-          if (comment.author.toString() !== req.user.id) {
-              return res.status(403).json({ message: 'You are not authorized to upload media to this comment' });
-          }
-  
-          if (req.files['images']) {
-              comment.images.push(...req.files['images'].map(file => file.path));
-          }
-  
-          if (req.files['videos']) {
-              comment.videos.push(...req.files['videos'].map(file => file.path));
-          }
-  
-          if (req.files['documents']) {
-              comment.documents.push(...req.files['documents'].map(file => file.path));
-          }
-  
-          await event.save();
-          res.status(200).json({ message: 'Media uploaded successfully', paths: req.files });
-      } catch (error) {
-          res.status(500).json({ message: error.message });
-      }
-  });
+]), authenticateToken, async (req, res) => {
+    try {
+        const { eventId, commentId } = req.params;
+        const event = await Event.findById(eventId);
+
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        const comment = event.comments.id(commentId);
+        if (!comment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        // Überprüfen, ob der Benutzer der Autor des Kommentars ist
+        if (comment.author.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'You are not authorized to upload media to this comment' });
+        }
+
+        if (req.files['images']) {
+            comment.images.push(...req.files['images'].map(file => `/uploads/${file.filename}`));
+        }
+
+        if (req.files['videos']) {
+            comment.videos.push(...req.files['videos'].map(file => `/uploads/${file.filename}`));
+        }
+
+        if (req.files['documents']) {
+            comment.documents.push(...req.files['documents'].map(file => `/uploads/${file.filename}`));
+        }
+
+        await event.save();
+        res.status(200).json({ message: 'Media uploaded successfully', paths: req.files });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Route zum Entfernen von Medien aus einem Kommentar
+router.post('/comments/:commentId/remove-media', authenticateToken, async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const { mediaType, mediaPath } = req.body;
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        // Überprüfen, ob der Benutzer der Autor des Kommentars oder ein Admin ist
+        if (comment.author.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'You are not authorized to remove media from this comment' });
+        }
+
+        if (mediaType === 'image') {
+            comment.images = comment.images.filter(path => path !== mediaPath);
+        } else if (mediaType === 'video') {
+            comment.videos = comment.videos.filter(path => path !== mediaPath);
+        } else if (mediaType === 'document') {
+            comment.documents = comment.documents.filter(path => path !== mediaPath);
+        }
+
+        await comment.save();
+        res.json({ message: 'Media removed successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
   
 
 //------------------ Tickets -------------------

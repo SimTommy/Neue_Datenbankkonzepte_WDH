@@ -1,0 +1,52 @@
+.comment-media {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.comment-media img, .comment-media video {
+    max-width: 150px; /* maximale Breite der Medien */
+    max-height: 150px; /* maximale Höhe der Medien */
+    border: 1px solid #ddd; /* Rand um die Medien */
+    padding: 5px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.comment-media img {
+    object-fit: cover; /* sorgt dafür, dass das Bild innerhalb der Begrenzungen bleibt */
+}
+
+.comment-media video {
+    width: 100%; /* setzt die Breite des Videos auf 100% des Containers */
+    height: auto; /* passt die Höhe proportional an */
+}
+
+.comment-media a {
+    display: block;
+    max-width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.comment-media a:hover {
+    text-decoration: underline;
+}
+
+.comment-media div {
+    position: relative;
+}
+
+.comment-media button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
