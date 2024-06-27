@@ -1,10 +1,10 @@
-// components/Layout/Header.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../AuthContext';
+import NotificationBell from './NotificationBell';
 import './Header.css';
 
-const Header = () => {
+const Header = ({ newMessageCount, newMessages, markAsRead }) => {
   const { user } = useAuth();
 
   return (
@@ -17,6 +17,7 @@ const Header = () => {
         {user && user.role === 'admin' && <Link to="/admin">Admin Panel</Link>}
         {user && <Link to="/profile">Profile</Link>}
         {user && <Link to="/messages">Messages</Link>}
+        {user && <NotificationBell newMessageCount={newMessageCount} newMessages={newMessages} markAsRead={markAsRead} />}
       </nav>
     </header>
   );

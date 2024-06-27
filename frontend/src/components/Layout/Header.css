@@ -26,3 +26,27 @@ header {
     margin-left: auto;
   }
   
+  .notifications {
+    position: relative;
+  }
+  
+  .notification-popup {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 200px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .notification-item {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .notification-item:last-child {
+    border-bottom: none;
+  }
+  

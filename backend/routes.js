@@ -743,6 +743,7 @@ router.post('/events/:eventId/notify', authenticateToken, async (req, res) => {
 });
 
 //------------------ Nachrichtensystem ----------------
+
 // Nachricht senden
 router.post('/messages', authenticateToken, async (req, res) => {
     const { receiverId, content } = req.body;
@@ -752,7 +753,8 @@ router.post('/messages', authenticateToken, async (req, res) => {
         const message = new Message({
             sender: senderId,
             receiver: receiverId,
-            content
+            content,
+            read: false // Initialisieren Sie das read-Feld
         });
 
         await message.save();
@@ -762,8 +764,45 @@ router.post('/messages', authenticateToken, async (req, res) => {
     }
 });
 
-// Nachrichten für einen Benutzer abrufen
+// Nachrichten für einen Benutzer abrufen (nur ungelesene Nachrichten)
 router.get('/messages', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        const messages = await Message.find({
+            receiver: userId,
+            read: false
+        }).populate('sender', 'username profileImage').sort('createdAt');
+        res.json(messages);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Nachricht als gelesen markieren
+router.put('/messages/:id/read', authenticateToken, async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.id);
+        if (!message) {
+            return res.status(404).json({ message: 'Message not found' });
+        }
+
+        // Überprüfen, ob der Benutzer der Empfänger ist
+        if (message.receiver.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'You are not authorized to mark this message as read' });
+        }
+
+        message.read = true;
+        await message.save();
+
+        res.status(200).json({ message: 'Message marked as read' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Alle Nachrichten für einen Benutzer abrufen (gelesene und ungelesene)
+router.get('/all-messages', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     const { userId: otherUserId } = req.query;
 

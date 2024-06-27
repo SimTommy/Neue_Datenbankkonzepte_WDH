@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../../AuthContext';
 import './Messages.css';
 
-const Messages = () => {
+const Messages = ({ setNewMessageCount }) => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -27,11 +27,13 @@ const Messages = () => {
 
   useEffect(() => {
     const fetchMessages = async () => {
+      console.log("Fetching messages for selected user:", selectedUser);
       if (selectedUser) {
         try {
-          const response = await axios.get(`http://localhost:4000/api/messages?userId=${selectedUser}`, {
+          const response = await axios.get(`http://localhost:4000/api/all-messages?userId=${selectedUser}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           });
+          console.log("Fetched messages:", response.data);
           setMessages(response.data);
         } catch (error) {
           console.error('Error fetching messages:', error);
@@ -42,6 +44,36 @@ const Messages = () => {
     fetchMessages();
   }, [selectedUser]);
 
+  const handleChangeUser = (e) => {
+    console.log("Changing user to:", e.target.value);
+    setSelectedUser(e.target.value);
+    setMessages([]);  // Reset messages when user is changed
+  };
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      if (selectedUser) {
+        try {
+          const response = await axios.get(`http://localhost:4000/api/messages?userId=${selectedUser}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          const newMessages = response.data.filter(
+            msg => !messages.some(m => m._id === msg._id)
+          );
+          if (newMessages.length > 0) {
+            console.log("New messages received:", newMessages);
+            setMessages(prevMessages => [...prevMessages, ...newMessages]);
+            setNewMessageCount(prevCount => prevCount + newMessages.length);
+          }
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+        }
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [selectedUser, messages, setNewMessageCount]);
+
   const handleSendMessage = async () => {
     try {
       const response = await axios.post('http://localhost:4000/api/messages', {
@@ -51,7 +83,6 @@ const Messages = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 
-      // Ensure the newMessage has all necessary data, including profileImage
       const newMessage = {
         ...response.data,
         sender: {
@@ -59,11 +90,10 @@ const Messages = () => {
           username: user.username,
           profileImage: user.profileImage || ''
         },
-        createdAt: new Date().toISOString() // Ensure the new message has a createdAt timestamp
+        createdAt: new Date().toISOString()
       };
 
-      // Debugging log to check the new message
-      console.log('New message:', newMessage);
+      console.log("Message sent:", newMessage);
 
       setMessages([...messages, newMessage]);
       setMessageContent('');
@@ -72,11 +102,22 @@ const Messages = () => {
     }
   };
 
+  const markAsRead = async (messageId) => {
+    try {
+      await axios.put(`http://localhost:4000/api/messages/${messageId}/read`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setMessages(messages.map(msg => msg._id === messageId ? { ...msg, read: true } : msg));
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  };
+
   return (
     <div className="messages">
       <h2>Messages</h2>
       <div className="message-form">
-        <select onChange={(e) => setSelectedUser(e.target.value)} value={selectedUser || ''}>
+        <select onChange={handleChangeUser} value={selectedUser || ''}>
           <option value="" disabled>Select user</option>
           {users.filter(u => u._id !== user.id).map(u => (
             <option key={u._id} value={u._id}>{u.username}</option>
@@ -91,7 +132,7 @@ const Messages = () => {
       </div>
       <div className="message-list">
         {messages.map(msg => (
-          <div key={msg._id} className={`message ${msg.sender._id === user.id ? 'own-message' : ''}`}>
+          <div key={msg._id} className={`message ${msg.sender._id === user.id ? 'own-message' : ''}`} onClick={() => markAsRead(msg._id)}>
             {msg.sender.profileImage && (
               <img src={`http://localhost:4000${msg.sender.profileImage}`} alt="Profile" className="profile-image" />
             )}
