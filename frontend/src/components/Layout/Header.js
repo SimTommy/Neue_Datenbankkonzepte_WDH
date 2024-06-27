@@ -1,3 +1,4 @@
+// components/Layout/Header.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../AuthContext';
@@ -15,6 +16,7 @@ const Header = () => {
         <Link to="/logout">Logout</Link>
         {user && user.role === 'admin' && <Link to="/admin">Admin Panel</Link>}
         {user && <Link to="/profile">Profile</Link>}
+        {user && <Link to="/messages">Messages</Link>}
       </nav>
     </header>
   );

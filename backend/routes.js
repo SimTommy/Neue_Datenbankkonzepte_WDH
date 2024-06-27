@@ -7,6 +7,7 @@ const User = require('./models/User');
 const Event = require('./models/Event');
 const Comment = require('./models/Comment');
 const Ticket = require('./models/Ticket');
+const Message = require('./models/Message');
 
 // Funktionen
 const upload = require('./mediaupload');
@@ -740,5 +741,45 @@ router.post('/events/:eventId/notify', authenticateToken, async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+//------------------ Nachrichtensystem ----------------
+// Nachricht senden
+router.post('/messages', authenticateToken, async (req, res) => {
+    const { receiverId, content } = req.body;
+    const senderId = req.user.id;
+
+    try {
+        const message = new Message({
+            sender: senderId,
+            receiver: receiverId,
+            content
+        });
+
+        await message.save();
+        res.status(201).json(message);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Nachrichten für einen Benutzer abrufen
+router.get('/messages', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    const { userId: otherUserId } = req.query;
+
+    try {
+        const messages = await Message.find({
+            $or: [
+                { sender: userId, receiver: otherUserId },
+                { sender: otherUserId, receiver: userId }
+            ]
+        }).populate('sender', 'username profileImage').sort('createdAt');
+        res.json(messages);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 
 module.exports = router;

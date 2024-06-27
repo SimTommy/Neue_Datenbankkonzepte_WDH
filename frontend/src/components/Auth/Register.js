@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './Register.css'; // Importiere das CSS für das Register-Formular
 
 function Register() {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
-        password: ''
+        password: '',
+        role: 'participant'
     });
 
     const handleChange = (e) => {
@@ -28,10 +30,38 @@ function Register() {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <input type="text" name="username" placeholder="Username" onChange={handleChange} required />
-            <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-            <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+        <form onSubmit={handleSubmit} className="register-form">
+            <input 
+                type="text" 
+                name="username" 
+                placeholder="Username" 
+                onChange={handleChange} 
+                required 
+            />
+            <input 
+                type="email" 
+                name="email" 
+                placeholder="Email" 
+                onChange={handleChange} 
+                required 
+            />
+            <input 
+                type="password" 
+                name="password" 
+                placeholder="Password" 
+                onChange={handleChange} 
+                required 
+            />
+            <select 
+                name="role" 
+                value={formData.role} 
+                onChange={handleChange} 
+                required
+            >
+                <option value="participant">Participant</option>
+                <option value="organizer">Organizer</option>
+                <option value="admin">Admin</option>
+            </select>
             <button type="submit">Register</button>
         </form>
     );
