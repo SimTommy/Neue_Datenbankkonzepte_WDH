@@ -1,4 +1,5 @@
 Schritt-für-Schritt-Anleitung zum Starten der Applikation
+
 Schritt 1: Docker Desktop starten
 Download und Installation:
 Gehen Sie zur Docker Desktop-Downloadseite.
